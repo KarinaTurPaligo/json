@@ -1,0 +1,2888 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PoolParty API - v1",
+    "version": "DEV_TESTING"
+  },
+  "servers": [
+    {
+      "url": "/pool-party/v1"
+    }
+  ],
+  "paths": {
+    "/metrics": {
+      "get": {
+        "summary": "Metrics",
+        "description": "Endpoint that serves Prometheus metrics.",
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Get the provisioning system's maintenance status",
+        "description": "**Returns information about ongoing or scheduled maintenance on the provisioning\nsystem**\n\nWhen the provisioning system is undergoing maintenance:\n* incoming modification requests are not accepted\n* provisioning jobs scheduled in advance run as usual; however, these cannot be\n modified, deleted or queried",
+        "operationId": "_get_status_pool_party_v1_status_get",
+        "responses": {
+          "200": {
+            "description": "Valid Access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse-Input"
+                },
+                "examples": {
+                  "No planned maintenance period": {
+                    "summary": "No planned maintenance period.",
+                    "description": "No maintenance period is upcoming and the system is fully functional",
+                    "value": {
+                      "detail": "The system is fully functional.",
+                      "response_code": 200,
+                      "provisioning_paused": false
+                    }
+                  },
+                  "Planned maintenance period": {
+                    "summary": "Planned maintenance period",
+                    "description": "There is an upcoming maintenance period. Users can still make requests as normal.",
+                    "value": {
+                      "detail": "The system is fully functional.",
+                      "response_code": 200,
+                      "provisioning_paused": false,
+                      "planned_maintenance_start": "2023-11-12T10:49:43.657016",
+                      "planned_maintenance_end": "2023-11-12T12:49:43.657021"
+                    }
+                  },
+                  "Current maintenance period": {
+                    "summary": "Maintenance period.",
+                    "description": "Users cannot make requests until after the end of the maintenance period described.",
+                    "value": {
+                      "detail": "The system is currently under maintenance.",
+                      "response_code": 200,
+                      "provisioning_paused": true,
+                      "maintenance_start": "2023-11-09T11:09:43.657024",
+                      "maintenance_end": "2023-11-09T11:29:43.657025",
+                      "message": "Planned maintenance to upgrade system to v1.1.2"
+                    }
+                  },
+                  "Emergency maintenance period": {
+                    "summary": "Unplanned maintenance period.",
+                    "description": "Users cannot make requests until the maintenance period has been manually lifted.",
+                    "value": {
+                      "detail": "The system is currently under investigation.",
+                      "response_code": 200,
+                      "provisioning_paused": true,
+                      "maintenance_start": "2023-11-09T11:09:43.657026",
+                      "message": "There is an issue with the provisioning system, please be patient whilst we investigate. If your query is critical please get in touch with our support team yospace-support@yospace.com"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                },
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/about-me": {
+      "get": {
+        "tags": [
+          "About Me"
+        ],
+        "summary": "Get a list of content provider environments available to me",
+        "description": "**Returns a list of the content provider environments available to the\nrequesting account**",
+        "operationId": "_about_me_pool_party_v1_about_me_get",
+        "parameters": [
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access to API endpoint granted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentProviderResponse"
+                },
+                "examples": {
+                  "authorised": {
+                    "summary": "Authorised",
+                    "value": {
+                      "detail": "User has access to 3 content providers.",
+                      "response_code": 200,
+                      "response": [
+                        {
+                          "content_provider_name": "yospacestg01"
+                        },
+                        {
+                          "content_provider_name": "yospaceprd01"
+                        },
+                        {
+                          "content_provider_name": "yospacestg02"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/pools": {
+      "get": {
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Get a list of all the CSM Edge pools",
+        "description": "**Returns a list of all the CSM Edge pools associated with the content provider\n environments available to the requesting account **",
+        "operationId": "_get_all_pools_pool_party_v1_pools_get",
+        "parameters": [
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid Access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolProviderResponse"
+                },
+                "examples": {
+                  "GET Pool collection": {
+                    "summary": "Get a Pool by its unique name identifier.",
+                    "value": {
+                      "detail": "Pools accessible to user by content provider (yospacedev01, yospacedev02, yospaceprd01, yospacestg01).",
+                      "response_code": 200,
+                      "response": [
+                        {
+                          "content_provider": "yospaceprd01",
+                          "pools": [
+                            {
+                              "name": "edge_pool_1",
+                              "base_viewer_capacity": 500,
+                              "rating": 1000,
+                              "content_provider": "yospaceprd01"
+                            },
+                            {
+                              "name": "edge_pool_2",
+                              "base_viewer_capacity": 500,
+                              "rating": 1000,
+                              "content_provider": "yospaceprd01"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/pools/{pool_name}": {
+      "get": {
+        "tags": [
+          "Pools"
+        ],
+        "summary": "Get a CSM Edge pool by name (`name`)",
+        "description": "**Returns the CSM Edge pool matching the name specified in the request**\n\nAs part of the information returned are the pool size and AWS account identifier",
+        "operationId": "_get_pool_by_name_pool_party_v1_pools__pool_name__get",
+        "parameters": [
+          {
+            "name": "pool_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Specifies a unique CSM Edge pool name",
+              "examples": [
+                "pool_name_1"
+              ],
+              "title": "Pool Name"
+            },
+            "description": "Specifies a unique CSM Edge pool name"
+          },
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid Access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolResponse"
+                },
+                "examples": {
+                  "Pool by name": {
+                    "summary": "Get a Pool by its unqiue name identifier.",
+                    "value": {
+                      "detail": "Pool accessible to user by content provider yospaceprd01.",
+                      "response_code": 200,
+                      "response": {
+                        "pool_name": "edge_pool_1",
+                        "base_viewer_capacity": 500,
+                        "rating": 1000,
+                        "content_provider": "yospaceprd01",
+                        "aws_account_id": 123456789,
+                        "instance_size": "t3.small"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The entity does not exist.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not found": {
+                    "summary": "",
+                    "value": {
+                      "detail": "[entity type] with id=[entity ID] not found!",
+                      "response_code": 404
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/prov-events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": " Get Events",
+        "description": "Get all the events for a user based on their content providers.",
+        "operationId": "_get_events_pool_party_v1_prov_events_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "viewer_capacity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Viewer Capacity"
+            }
+          },
+          {
+            "name": "pool_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pool Id"
+            }
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Time"
+            }
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Time"
+            }
+          },
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid Access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventProviderResponse-Input"
+                },
+                "examples": {
+                  "authorised": {
+                    "summary": "Authorised",
+                    "value": {
+                      "detail": "Successfully returned 2 Events for users content providers (yospacedev01, yospaceprd01, yospacestg01).",
+                      "response_code": 200,
+                      "response": [
+                        {
+                          "content_provider": "yospaceprd01",
+                          "events": [
+                            {
+                              "id": 21,
+                              "event_name": "Event Name",
+                              "status": "IN_PROGRESS",
+                              "total_capacity": 100000,
+                              "total_provisioned_capacity": 25000,
+                              "start_time": "2023-09-01T12:00:00",
+                              "end_time": "2023-09-01T17:00:00",
+                              "tasks": [
+                                {
+                                  "edge_pool_name": "edge_pool_1",
+                                  "capacity": 50000,
+                                  "provisioned_capacity": 50000,
+                                  "status": "SUCCESSFUL"
+                                },
+                                {
+                                  "edge_pool_name": "edge_pool_2",
+                                  "capacity": 50000,
+                                  "provisioned_capacity": 25000,
+                                  "status": "IN_PROGRESS"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "content_provider": "yospacedev01",
+                          "events": [
+                            {
+                              "id": 20,
+                              "event_name": "DEV Event Name",
+                              "status": "SUCCESSFUL",
+                              "total_capacity": 100000,
+                              "total_provisioned_capacity": 105000,
+                              "start_time": "2023-08-21T12:00:00",
+                              "end_time": "2023-08-21T13:00:00",
+                              "tasks": [
+                                {
+                                  "edge_pool_name": "edge_pool_1",
+                                  "capacity": 50000,
+                                  "provisioned_capacity": 52500,
+                                  "status": "SUCCESSFUL"
+                                },
+                                {
+                                  "edge_pool_name": "edge_pool_2",
+                                  "capacity": 50000,
+                                  "provisioned_capacity": 52500,
+                                  "status": "SUCCESSFUL"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": " Create Event",
+        "description": "Create an Event and increase Pool capacity.\n\nAll pools in request body must belong to the same provider. If they belong to\ndifferent providers then the event cannot be created.",
+        "operationId": "_create_event_pool_party_v1_prov_events_post",
+        "parameters": [
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse-Input"
+                },
+                "examples": {
+                  "Successful": {
+                    "summary": "Event Created",
+                    "value": {
+                      "detail": "Successfuly created ProvisioningEvent Yospace-Test_Event_Name.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 21,
+                        "event_name": "Yospace-Test_Event_Name",
+                        "status": "PENDING",
+                        "total_capacity": 0,
+                        "total_provisioned_capacity": 0,
+                        "start_time": "2023-09-01T12:00:00",
+                        "end_time": "2023-09-01T17:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 0,
+                            "status": "PENDING"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 0,
+                            "status": "PENDING"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com",
+                        "approved_by": "auto-approved@yospace.com"
+                      }
+                    }
+                  },
+                  "Exceed Restriction": {
+                    "summary": "Exceed Restriction",
+                    "description": "Event is still created but a restriction applied to the provider has been exceeded e.g. maximum capacity and has to be approved (approver set to None)",
+                    "value": {
+                      "detail": "Successfuly created ProvisioningEvent Yospace-Test_Event_Name.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 21,
+                        "event_name": "Yospace-Test_Event_Name",
+                        "status": "PENDING",
+                        "total_capacity": 0,
+                        "total_provisioned_capacity": 0,
+                        "start_time": "2023-09-01T12:00:00",
+                        "end_time": "2023-09-01T17:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 50000,
+                            "status": "SUCCESSFUL"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 25000,
+                            "status": "IN_PROGRESS"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Bad Pool": {
+                    "summary": "Unauthorised Pool",
+                    "value": {
+                      "detail": "User cannot create Event Yospace-Test_Event_Name as they do not have access to pools edge_pool_100, edge_pool_101.",
+                      "response_code": 400
+                    }
+                  },
+                  "Bad Content Provider": {
+                    "summary": "Pools with different content providers",
+                    "value": {
+                      "detail": "Cannot create Event Yospace-Test_Event_Name as pools provided belong to different content providers (content_provider_1, content_provider_2)",
+                      "response_code": 400
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The entity does not exist.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not found": {
+                    "summary": "",
+                    "value": {
+                      "detail": "[entity type] with id=[entity ID] not found!",
+                      "response_code": 404
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pool-party/v1/prov-events/{event_id}": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": " Get Events By Id",
+        "description": "Get an event by its ID.",
+        "operationId": "_get_events_by_id_pool_party_v1_prov_events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid Access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventProviderResponse-Input"
+                },
+                "examples": {
+                  "Auto Approved": {
+                    "summary": "Event auto approved.",
+                    "value": {
+                      "detail": "Successfully returned Event 21.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 21,
+                        "event_name": "Event Name",
+                        "status": "IN_PROGRESS",
+                        "total_capacity": 100000,
+                        "total_provisioned_capacity": 25000,
+                        "start_time": "2023-09-01T12:00:00",
+                        "end_time": "2023-09-01T17:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 50000,
+                            "status": "SUCCESSFUL"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 25000,
+                            "status": "IN_PROGRESS"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com",
+                        "approved_by": "auto-approver@yospace.com"
+                      }
+                    }
+                  },
+                  "Not Approved": {
+                    "summary": "Event waiting to be approved by Yospace.",
+                    "value": {
+                      "detail": "Successfully returned Event 20.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 22,
+                        "event_name": "DEV Event Name",
+                        "status": "APPROVAL_NEEDED",
+                        "total_capacity": 100000,
+                        "total_provisioned_capacity": 105000,
+                        "start_time": "2023-10-28T12:00:00",
+                        "end_time": "2023-10-28T15:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 52500,
+                            "status": "PENDING"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 52500,
+                            "status": "PENDING"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The entity does not exist.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not found": {
+                    "summary": "",
+                    "value": {
+                      "detail": "[entity type] with id=[entity ID] not found!",
+                      "response_code": 404
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Events"
+        ],
+        "summary": " Update Event",
+        "description": "Update an Events data including Tasks.\n\nWhen updating an event;\n* If a pool is present in the request that is NOT present in\nthe event already a 400 response will be returned. You should DELETE/CANCEL the\nEvent and create a new Event if more capacity is required on another Pool.\n* If a pool is NOT present in the PUT request that is present in the event then\n the pool task will NOT be deleted. The capacity of the pools specified in the\n request will be updated. You should DELETE/CANCEL the Event and create a\n new Event.",
+        "operationId": "_update_event_pool_party_v1_prov_events__event_id__put",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse-Input"
+                },
+                "examples": {
+                  "Successful": {
+                    "summary": "Event Updated",
+                    "value": {
+                      "detail": "Successfully updated ProvisioningEvent Yospace-NEW_Test_Event_Name.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 21,
+                        "event_name": "Yospace-NEW_Test_Event_Name",
+                        "status": "PRECHECK",
+                        "total_capacity": 0,
+                        "total_provisioned_capacity": 0,
+                        "start_time": "2023-09-29T09:00:00",
+                        "end_time": "2023-09-29T12:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 0,
+                            "status": "PENDING"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 0,
+                            "status": "PENDING"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com",
+                        "approved_by": "auto-approved@yospace.com"
+                      }
+                    }
+                  },
+                  "Exceed Restriction": {
+                    "summary": "Exceed Restriction",
+                    "description": "Event is still updated but a restriction applied to the provider has been exceeded e.g. maximum capacity, and has to be re-approved.",
+                    "value": {
+                      "detail": "Successfuly updated ProvisioningEvent Yospace-NEW_Test_Event_Name.",
+                      "response_code": 200,
+                      "response": {
+                        "id": 21,
+                        "event_name": "Yospace-Test_Event_Name",
+                        "status": "APPROVAL_NEEDED",
+                        "total_capacity": 0,
+                        "total_provisioned_capacity": 0,
+                        "start_time": "2023-09-29T09:00:00",
+                        "end_time": "2023-09-29T12:00:00",
+                        "tasks": [
+                          {
+                            "edge_pool_name": "edge_pool_1",
+                            "capacity": 50000,
+                            "provisioned_capacity": 50000,
+                            "status": "PENDING"
+                          },
+                          {
+                            "edge_pool_name": "edge_pool_2",
+                            "capacity": 50000,
+                            "provisioned_capacity": 25000,
+                            "status": "PENDING"
+                          }
+                        ],
+                        "requested_by": "requester@gmail.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Bad Edge Pool": {
+                    "summary": "Bad Edge Pool.",
+                    "description": "Can only update Event Pool if it was present in the original POST request.",
+                    "value": {
+                      "detail": "Cannot update Event capacity for pool bad_pool_name as it was not set for alteration when Event was created. CANCEL Event 21 and create a new Event with the correct pools",
+                      "response_code": 400
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The entity does not exist.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not found": {
+                    "summary": "",
+                    "value": {
+                      "detail": "[entity type] with id=[entity ID] not found!",
+                      "response_code": 404
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": " Delete Event",
+        "description": "Cancel an Event.",
+        "operationId": "_delete_event_pool_party_v1_prov_events__event_id__delete",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "x-userinfo",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "X-Userinfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                },
+                "examples": {
+                  "Event deleted": {
+                    "value": {
+                      "detail": "Successfully cancelled Event 21",
+                      "response_code": 200
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request to API endpoint denied: authorisation failed",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User not authenticated",
+                    "value": {
+                      "detail": "Unauthorised",
+                      "response_code": 401
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request to API endpoint denied: authorisation was successful but access is forbidden",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "summary": "User permissions do not allow access to endpoint",
+                    "value": {
+                      "detail": "Forbidden",
+                      "response_code": 403
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The entity does not exist.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not found": {
+                    "summary": "",
+                    "value": {
+                      "detail": "[entity type] with id=[entity ID] not found!",
+                      "response_code": 404
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "'Internal Server Error' response encountered by the API",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "caught": {
+                    "summary": "Internal Server Error",
+                    "description": "Internal Server Error caught by the API and raised. Check the logs for more detail.",
+                    "value": {
+                      "detail": "Internal Server Error",
+                      "response_code": 500
+                    }
+                  },
+                  "uncaught": {
+                    "summary": "Unexpected Internal Server Error",
+                    "description": "This is the response when a server error occured but was not caught by the application.",
+                    "value": {
+                      "detail": "Something bad has happened. Please contact support@yospace.com",
+                      "response_code": 500
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MinimalResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContentProviderItem": {
+        "properties": {
+          "content_provider_name": {
+            "type": "string",
+            "title": "Content Provider Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content_provider_name"
+        ],
+        "title": "ContentProviderItem",
+        "description": "A content provider accessible by a user."
+      },
+      "ContentProviderResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "response": {
+            "items": {
+              "$ref": "#/components/schemas/ContentProviderItem"
+            },
+            "type": "array",
+            "title": "Response",
+            "examples": [
+              [
+                {
+                  "content_provider_name": "yospaceprd01"
+                },
+                {
+                  "content_provider_name": "yospacestg01"
+                },
+                {
+                  "content_provider_name": "<customer_name>prd01"
+                }
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "ContentProviderResponse",
+        "description": "Response that contains content providers for a user."
+      },
+      "Event": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "examples": [
+              21
+            ]
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "examples": [
+              "IN_PROGRESS"
+            ]
+          },
+          "total_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Capacity",
+            "examples": [
+              75000
+            ]
+          },
+          "total_provisioned_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Provisioned Capacity",
+            "examples": [
+              50000
+            ]
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "examples": [
+              "2023-11-09T10:00:00"
+            ]
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "examples": [
+              "2023-11-09T13:00:00"
+            ]
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "examples": [
+              [
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_1",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_2",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_3",
+                  "provisioned_capacity": 0,
+                  "status": "IN_PROGRESS"
+                }
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_name",
+          "status",
+          "total_capacity",
+          "total_provisioned_capacity",
+          "start_time",
+          "end_time",
+          "tasks"
+        ],
+        "title": "Event",
+        "description": "An event model for the view of an external user."
+      },
+      "EventCreate": {
+        "properties": {
+          "event_name": {
+            "type": "string",
+            "title": "Event Name",
+            "description": "The name of the Event. The format we recommend is <CUSTOMER-NAME>-<CUSTOMER_INTERNAL_REFERENCE>.",
+            "examples": [
+              "Yospace-Test_Event_Name"
+            ]
+          },
+          "event_start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Start Time",
+            "description": "A 24 hour UTC Timestamp describing the time you would like the capacity to be available for.",
+            "examples": [
+              "2023-11-10T10:49:43.312992"
+            ]
+          },
+          "event_end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event End Time",
+            "description": "A 24 hour UTC Timestamp describing the time you would like the capacity to start being removed.",
+            "examples": [
+              "2023-11-10T13:49:43.313010"
+            ]
+          },
+          "pools": {
+            "items": {
+              "$ref": "#/components/schemas/PoolTask"
+            },
+            "type": "array",
+            "title": "Pools",
+            "description": "A List of pool items; pool name / viewer capacity to provision pairs",
+            "examples": [
+              [
+                {
+                  "pool_name": "edge_pool_1",
+                  "viewer_capacity": 10000
+                },
+                {
+                  "pool_name": "edge_pool_2",
+                  "viewer_capacity": 10000
+                }
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_name",
+          "event_start_time",
+          "event_end_time",
+          "pools"
+        ],
+        "title": "EventCreate",
+        "description": "Data to sent in request to create an Event"
+      },
+      "EventLong-Input": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "examples": [
+              21
+            ]
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "examples": [
+              "IN_PROGRESS"
+            ]
+          },
+          "total_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Capacity",
+            "examples": [
+              75000
+            ]
+          },
+          "total_provisioned_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Provisioned Capacity",
+            "examples": [
+              50000
+            ]
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "examples": [
+              "2023-11-09T10:00:00"
+            ]
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "examples": [
+              "2023-11-09T13:00:00"
+            ]
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "examples": [
+              [
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_1",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_2",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_3",
+                  "provisioned_capacity": 0,
+                  "status": "IN_PROGRESS"
+                }
+              ]
+            ]
+          },
+          "requested_by": {
+            "type": "string",
+            "title": "Requested By"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_name",
+          "status",
+          "total_capacity",
+          "total_provisioned_capacity",
+          "start_time",
+          "end_time",
+          "tasks",
+          "requested_by"
+        ],
+        "title": "EventLong",
+        "description": "An event model for the view of an external user."
+      },
+      "EventLong-Output": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "examples": [
+              21
+            ]
+          },
+          "event_name": {
+            "type": "string",
+            "title": "Event Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "examples": [
+              "IN_PROGRESS"
+            ]
+          },
+          "total_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Capacity",
+            "examples": [
+              75000
+            ]
+          },
+          "total_provisioned_capacity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Provisioned Capacity",
+            "examples": [
+              50000
+            ]
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time",
+            "examples": [
+              "2023-11-09T10:00:00"
+            ]
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time",
+            "examples": [
+              "2023-11-09T13:00:00"
+            ]
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "examples": [
+              [
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_1",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_2",
+                  "provisioned_capacity": 25000,
+                  "status": "SUCCESSFUL"
+                },
+                {
+                  "capacity": 25000,
+                  "edge_pool_name": "edge_pool_3",
+                  "provisioned_capacity": 0,
+                  "status": "IN_PROGRESS"
+                }
+              ]
+            ]
+          },
+          "requested_by": {
+            "type": "string",
+            "title": "Requested By"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_name",
+          "status",
+          "total_capacity",
+          "total_provisioned_capacity",
+          "start_time",
+          "end_time",
+          "tasks",
+          "requested_by",
+          "approved_by"
+        ],
+        "title": "EventLong",
+        "description": "An event model for the view of an external user."
+      },
+      "EventProvider-Input": {
+        "properties": {
+          "content_provider": {
+            "type": "string",
+            "title": "Content Provider"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content_provider",
+          "events"
+        ],
+        "title": "EventProvider",
+        "description": "Events mapped to a provider"
+      },
+      "EventProvider-Output": {
+        "properties": {
+          "content_provider": {
+            "type": "string",
+            "title": "Content Provider"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content_provider",
+          "events"
+        ],
+        "title": "EventProvider",
+        "description": "Events mapped to a provider"
+      },
+      "EventProviderResponse-Input": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "pagination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PagingItem-Input"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pagination information"
+          },
+          "response": {
+            "items": {
+              "$ref": "#/components/schemas/EventProvider-Input"
+            },
+            "type": "array",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "EventProviderResponse",
+        "description": "Response that contain events for a user."
+      },
+      "EventProviderResponse-Output": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "pagination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PagingItem-Output"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pagination information"
+          },
+          "response": {
+            "items": {
+              "$ref": "#/components/schemas/EventProvider-Output"
+            },
+            "type": "array",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "pagination",
+          "response"
+        ],
+        "title": "EventProviderResponse",
+        "description": "Response that contain events for a user."
+      },
+      "EventResponse-Input": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "response": {
+            "$ref": "#/components/schemas/EventLong-Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "EventResponse",
+        "description": "Single Event response with additional detail on an Event"
+      },
+      "EventResponse-Output": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "response": {
+            "$ref": "#/components/schemas/EventLong-Output"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "EventResponse",
+        "description": "Single Event response with additional detail on an Event"
+      },
+      "EventUpdate": {
+        "properties": {
+          "event_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Name",
+            "description": "The name of the Event. The format we recommend is <CUSTOMER-NAME>-<CUSTOMER_INTERNAL_REFERENCE>.",
+            "examples": [
+              "Yospace-NEW_Test_Event_Name"
+            ]
+          },
+          "event_start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Start Time",
+            "description": "A 24 hour UTC Timestamp describing the time you would like the capacity to be available for.",
+            "examples": [
+              "2023-11-11T10:00:00"
+            ]
+          },
+          "event_end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event End Time",
+            "description": "A 24 hour UTC Timestamp describing the time you would like the capacity to start being removed.",
+            "examples": [
+              "2023-11-11T13:00:00"
+            ]
+          },
+          "pools": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PoolTask"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pools",
+            "description": "A List of pool name / viewer capacity pairs to update the current pairs with an updated viewer capacity",
+            "examples": [
+              null,
+              [
+                {
+                  "pool_name": "edge_pool_1",
+                  "viewer_capacity": 10000
+                }
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "title": "EventUpdate",
+        "description": "Data to sent in request to update an Event"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MinimalResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code"
+        ],
+        "title": "MinimalResponse",
+        "description": "The minimal response returned to a successful API call."
+      },
+      "PagingItem-Input": {
+        "properties": {
+          "first_page": {
+            "type": "string",
+            "title": "First Page"
+          },
+          "current_page": {
+            "type": "string",
+            "title": "Current Page"
+          },
+          "next_page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Page"
+          },
+          "last_page": {
+            "type": "string",
+            "title": "Last Page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first_page",
+          "current_page",
+          "last_page"
+        ],
+        "title": "PagingItem",
+        "description": "Model to hold pagination information."
+      },
+      "PagingItem-Output": {
+        "properties": {
+          "first_page": {
+            "type": "string",
+            "title": "First Page"
+          },
+          "current_page": {
+            "type": "string",
+            "title": "Current Page"
+          },
+          "next_page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Page"
+          },
+          "last_page": {
+            "type": "string",
+            "title": "Last Page"
+          }
+        },
+        "type": "object",
+        "required": [
+          "first_page",
+          "current_page",
+          "next_page",
+          "last_page"
+        ],
+        "title": "PagingItem",
+        "description": "Model to hold pagination information."
+      },
+      "Pool": {
+        "properties": {
+          "pool_name": {
+            "type": "string",
+            "title": "Pool Name"
+          },
+          "base_capacity": {
+            "type": "integer",
+            "title": "Base Capacity"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "content_provider": {
+            "type": "string",
+            "title": "Content Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pool_name",
+          "base_capacity",
+          "rating",
+          "content_provider"
+        ],
+        "title": "Pool",
+        "description": "A Pool model for the view of an external user."
+      },
+      "PoolLong": {
+        "properties": {
+          "pool_name": {
+            "type": "string",
+            "title": "Pool Name"
+          },
+          "base_capacity": {
+            "type": "integer",
+            "title": "Base Capacity"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "content_provider": {
+            "type": "string",
+            "title": "Content Provider"
+          },
+          "aws_account": {
+            "type": "string",
+            "title": "Aws Account"
+          },
+          "instance_size": {
+            "type": "string",
+            "title": "Instance Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pool_name",
+          "base_capacity",
+          "rating",
+          "content_provider",
+          "aws_account",
+          "instance_size"
+        ],
+        "title": "PoolLong",
+        "description": "A Pool model with extra information."
+      },
+      "PoolProvider": {
+        "properties": {
+          "content_provider": {
+            "type": "string",
+            "title": "Content Provider"
+          },
+          "pools": {
+            "items": {
+              "$ref": "#/components/schemas/Pool"
+            },
+            "type": "array",
+            "title": "Pools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content_provider",
+          "pools"
+        ],
+        "title": "PoolProvider",
+        "description": "Pools mapped to a provider"
+      },
+      "PoolProviderResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "response": {
+            "items": {
+              "$ref": "#/components/schemas/PoolProvider"
+            },
+            "type": "array",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "PoolProviderResponse",
+        "description": "Response that contain Pool accessible to a user."
+      },
+      "PoolResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "response": {
+            "$ref": "#/components/schemas/PoolLong"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "response"
+        ],
+        "title": "PoolResponse",
+        "description": "Single Pool response with additional detail on an Pool"
+      },
+      "PoolTask": {
+        "properties": {
+          "pool_name": {
+            "type": "string",
+            "title": "Pool Name"
+          },
+          "viewer_capacity": {
+            "type": "integer",
+            "title": "Viewer Capacity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pool_name",
+          "viewer_capacity"
+        ],
+        "title": "PoolTask",
+        "description": "A Task item to alter the capacity of a pool"
+      },
+      "StatusResponse-Input": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "provisioning_paused": {
+            "type": "boolean",
+            "title": "Provisioning Paused"
+          },
+          "maintenance_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance Start"
+          },
+          "maintenance_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance End"
+          },
+          "maintenance_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance Message"
+          },
+          "planned_maintenance_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Maintenance Start"
+          },
+          "planned_maintenance_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Maintenance End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "provisioning_paused"
+        ],
+        "title": "StatusResponse",
+        "description": "Response that contains information about maintenance periods."
+      },
+      "StatusResponse-Output": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "A useful message for the response"
+          },
+          "response_code": {
+            "type": "integer",
+            "title": "Response Code",
+            "description": "Status code for the response"
+          },
+          "provisioning_paused": {
+            "type": "boolean",
+            "title": "Provisioning Paused"
+          },
+          "maintenance_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance Start"
+          },
+          "maintenance_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance End"
+          },
+          "maintenance_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maintenance Message"
+          },
+          "planned_maintenance_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Maintenance Start"
+          },
+          "planned_maintenance_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Maintenance End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "response_code",
+          "provisioning_paused",
+          "maintenance_start",
+          "maintenance_end",
+          "maintenance_message",
+          "planned_maintenance_start",
+          "planned_maintenance_end"
+        ],
+        "title": "StatusResponse",
+        "description": "Response that contains information about maintenance periods."
+      },
+      "Task": {
+        "properties": {
+          "edge_pool_name": {
+            "type": "string",
+            "title": "Edge Pool Name"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "provisioned_capacity": {
+            "type": "integer",
+            "title": "Provisioned Capacity"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edge_pool_name",
+          "capacity",
+          "provisioned_capacity",
+          "status"
+        ],
+        "title": "Task",
+        "description": "A Task belongs to an Event pointing to a Pool"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
